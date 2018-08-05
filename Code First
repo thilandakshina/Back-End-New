@@ -1,0 +1,29 @@
+Package Manager Console
+
+
+PM> enable-migrations
+Checking if the context targets an existing database...
+Code First Migrations enabled for project LYC.StdMgt.Repository.
+
+
+PM> add-migration InitialDB
+Scaffolding migration 'InitialDB'.
+The Designer Code for this migration file includes a snapshot of your current Code First model....
+
+PM> update-database
+Specify the '-Verbose' flag to view the SQL statements being applied to the target database.
+Applying explicit migrations: [201807210747415_InitialDB].
+Applying explicit migration: 201807210747415_InitialDB.
+Running Seed method.
+
+
+
+
+
+
+Articles
+
+
+C# Base Class
+
+https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/base
