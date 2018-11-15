@@ -1,0 +1,47 @@
+<form class="stdform" #studentForm="ngForm" (ngSubmit)="onSubmit(studentForm)">
+  <input type="hidden" name="Id" #Id="ngModel" [(ngModel)]="studentService.selectedStudent.Id">
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <input class="form-control" name="FirstName" #FirstName="ngModel" [(ngModel)]="studentService.selectedStudent.FirstName"
+        placeholder="First Name" required>
+      <div class="validation-error" *ngIf="FirstName.invalid && FirstName.touched">This Field is Required.</div>
+    </div>
+    <div class="form-group col-md-6">
+      <input class="form-control" name="LastName" #LastName="ngModel" [(ngModel)]="studentService.selectedStudent.LastName" placeholder="Last Name"
+        required>
+      <div class="validation-error" *ngIf="LastName.invalid && LastName.touched">This Field is Required.</div>
+    </div>
+  </div>
+  <div class="form-group">
+    <input class="form-control" name="ParentName" #ParentName="ngModel" [(ngModel)]="studentService.selectedStudent.ParentName" placeholder="ParentName">
+  </div>
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <input class="form-control" name="DOB" #DOB="ngModel" [(ngModel)]="studentService.selectedStudent.DOB" placeholder="Emp DOB">
+    <label name="Code" #Code="ngModel" [(ngModel)]="studentService.selectedStudent.Code" placeholder="Emp Code"> </label>
+
+    </div>
+
+    <div class="form-group col-md-6">
+
+         <select id="gender" name="gender" [(ngModel)]="studentService.selectedStudent.Gender" (ngModelChange)="onChange($event)"  class="form-control">
+          <option *ngFor="let gen of genreList" [value]="gen.id" >
+            {{gen.name}}
+          </option>
+        </select>
+      </div>
+
+      
+
+  </div>
+  <div class="form-row">
+    <div class="form-group col-md-8">
+      <button [disabled]="!studentForm.valid" type="submit" class="btn btn-lg btn-block btn-info">
+        <i class="fa fa-floppy-o"></i> Submit</button>
+    </div>
+    <div class="form-group col-md-4">
+      <button type="button" class="btn btn-lg btn-block btn-secondary" (click)="resetForm(studentForm)">
+        <i class="fa fa-repeat"></i> Reset</button>
+    </div>
+  </div>
+</form>
