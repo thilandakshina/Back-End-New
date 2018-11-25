@@ -1,0 +1,111 @@
+using Google.Apis.Services;
+using Google.Apis.YouTube.v3;
+using IA.Vid.Domain;
+using IA.Vid.Services.Contract;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IA.Vid.Services
+{
+    public class ServicesManager : IServicesManager
+    {
+
+        public List<Media> MediaSearchList(string keyword)
+        {
+            List<Media> videoList = new List<Media>();
+
+            try
+            {
+               // var result = WebValue;
+                var result = RunSearch(keyword).Result;
+                //var result = ServicesManager.RunTask(MyAsyncMethod).Result;
+                //Task<List<Media>> task = Task.Run<List<Media>>(async () => await Run());
+
+                //task.RunSynchronously();
+                videoList = result;
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return videoList;
+        }
+
+        private async Task<List<Media>> RunSearch(string keyword)
+        {
+            List<Media> videoList = new List<Media>();
+
+
+            try
+            {
+                var youtubeService = new YouTubeService(new BaseClientService.Initializer()
+                {
+                    //ApiKey = "AIzaSyDugObuoTqhgSfRKx2aBpR1b1v20elVEvU-O4_zD3NxQxGs2BY",
+                    ApiKey = "AIzaSyBefa0s5GaiveRFg76bjnTJpEXhAxsmJZg",
+                    ApplicationName = this.GetType().ToString()
+                });
+
+
+
+                var searchListRequest = youtubeService.Search.List("snippet");
+                searchListRequest.Q = keyword; // Replace with your search term.
+                searchListRequest.MaxResults = 5;
+                searchListRequest.Type = "video";
+                // searchListRequest.ForMine = true;
+                // Call the search.list method to retrieve results matching the specified query term.
+                // var searchListResponse = await searchListRequest.ExecuteAsync();
+
+
+                var searchListResponse = searchListRequest.ExecuteAsync().Result;
+
+
+
+                List<string> videos = new List<string>();
+                List<string> channels = new List<string>();
+                List<string> playlists = new List<string>();
+
+                // Add each result to the appropriate list, and then display the lists of
+                // matching videos, channels, and playlists.
+                foreach (var searchResult in searchListResponse.Items)
+                {
+                    Media videoobj = new Media();
+
+
+
+                    switch (searchResult.Id.Kind)
+                    {
+                        case "youtube#video":
+                            // videos.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.VideoId));
+                            videoobj.VideoId = searchResult.Id.VideoId;
+                            videoobj.ThumbnailUrl = searchResult.Snippet.Thumbnails.Medium.Url;
+                            videoobj.ChannelId = searchResult.Snippet.ChannelId;
+                            videoobj.Descriptiion = searchResult.Snippet.Description;
+                            videoobj.Title = searchResult.Snippet.Title;
+                            videoobj.VideoUrl = "https://www.youtube.com/embed/" + searchResult.Id.VideoId;
+
+                            videoList.Add(videoobj);
+                            break;
+
+                        case "youtube#channel":
+                            channels.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.ChannelId));
+                            break;
+
+                        case "youtube#playlist":
+                            playlists.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.PlaylistId));
+                            break;
+                    }
+                }
+
+
+            }
+
+            catch (Exception ex)
+            {
+            }
+            return videoList;
+        }
+    }
+}
