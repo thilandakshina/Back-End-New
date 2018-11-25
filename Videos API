@@ -1,0 +1,178 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.Mvc;
+
+
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Services;
+using Google.Apis.Upload;
+using Google.Apis.Util.Store;
+using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
+using System.IO;
+using System.Threading;
+using IA.WebApp.Models;
+
+namespace IA.WebApp.Controllers
+{
+    public class HomeController : Controller
+    {
+        public async Task<ActionResult> Index()
+        {
+            return RedirectToAction("Videos", "Home");
+        }
+        public async Task<ActionResult> Videos()
+        {
+            List<Videos> videoList = new List<Videos>();
+            try
+            {
+
+
+                HomeController searchObject = new HomeController();
+                videoList = await searchObject.Run();
+
+                // new HomeController().Run().Wait();
+            }
+            catch (AggregateException ex)
+            {
+                foreach (var e in ex.InnerExceptions)
+                {
+                    Console.WriteLine("Error: " + e.Message);
+                }
+            }
+
+
+            return View(videoList);
+        }
+        public ActionResult About()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
+
+        public ActionResult Contact()
+        {
+            ViewBag.Message = "Your contact page.";
+
+            return View();
+        }
+
+
+        private async  Task<List<Videos>> Run()
+        {
+            List<Videos> videoList = new List<Videos>();
+
+            var youtubeService = new YouTubeService(new BaseClientService.Initializer()
+            {
+                //ApiKey = "AIzaSyDugObuoTqhgSfRKx2aBpR1b1v20elVEvU-O4_zD3NxQxGs2BY",
+                ApiKey = "AIzaSyBefa0s5GaiveRFg76bjnTJpEXhAxsmJZg",
+                ApplicationName = this.GetType().ToString()
+            });
+
+
+
+            var searchListRequest = youtubeService.Search.List("snippet");
+            searchListRequest.Q = "Google"; // Replace with your search term.
+            searchListRequest.MaxResults = 5;
+            searchListRequest.Type = "video";
+            // searchListRequest.ForMine = true;
+            // Call the search.list method to retrieve results matching the specified query term.
+            var searchListResponse = await searchListRequest.ExecuteAsync();
+
+            List<string> videos = new List<string>();
+            List<string> channels = new List<string>();
+            List<string> playlists = new List<string>();
+
+            // Add each result to the appropriate list, and then display the lists of
+            // matching videos, channels, and playlists.
+            foreach (var searchResult in searchListResponse.Items)
+            {
+                Videos videoobj = new Videos();
+
+
+
+                switch (searchResult.Id.Kind)
+                {
+                    case "youtube#video":
+                        // videos.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.VideoId));
+                        videoobj.VideoId = searchResult.Id.VideoId;
+                        videoobj.ThumbnailUrl = searchResult.Snippet.Thumbnails.Medium.Url;
+                        videoobj.ChannelId = searchResult.Snippet.ChannelId;
+                        videoobj.Descriptiion = searchResult.Snippet.Description;
+                        videoobj.Title = searchResult.Snippet.Title;
+                        videoobj.VideoUrl = "https://www.youtube.com/embed/" + searchResult.Id.VideoId;
+
+                        videoList.Add(videoobj);
+                        break;
+
+                    case "youtube#channel":
+                        channels.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.ChannelId));
+                        break;
+
+                    case "youtube#playlist":
+                        playlists.Add(String.Format("{0} ({1})", searchResult.Snippet.Title, searchResult.Id.PlaylistId));
+                        break;
+                }
+
+            }
+            return videoList;
+            //Console.WriteLine(String.Format("Videos:\n{0}\n", string.Join("\n", videos)));
+            //Console.WriteLine(String.Format("Channels:\n{0}\n", string.Join("\n", channels)));
+            //Console.WriteLine(String.Format("Playlists:\n{0}\n", string.Join("\n", playlists)));
+        }
+
+
+        //private async Task Run()
+        //{
+        //    //string fileName = @"C:\Users\SomeUser\My Documents\Foo\Bar\Baz\text1.txt";
+        //    string fileName = @"E:\Practise\2018-11-24\IA\IA.WebApp\client_secrets.json";
+        //    Directory.CreateDirectory(Path.GetDirectoryName(fileName));
+
+        //    UserCredential credential;
+        //    using (var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+        //    {
+        //        credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+        //            GoogleClientSecrets.Load(stream).Secrets,
+        //            // This OAuth 2.0 access scope allows for full read/write access to the
+        //            // authenticated user's account.
+        //            new[] { YouTubeService.Scope.Youtube },
+        //            "user",
+        //            CancellationToken.None,
+        //            new FileDataStore(this.GetType().ToString())
+        //        );
+        //    }
+
+        //    var youtubeService = new YouTubeService(new BaseClientService.Initializer()
+        //    {
+        //        HttpClientInitializer = credential,
+        //        ApplicationName = this.GetType().ToString()
+        //    });
+
+        //    // Create a new, private playlist in the authorized user's channel.
+        //    var newPlaylist = new Playlist();
+        //    newPlaylist.Snippet = new PlaylistSnippet();
+        //    newPlaylist.Snippet.Title = "Test Playlist";
+        //    newPlaylist.Snippet.Description = "A playlist created with the YouTube API v3";
+        //    newPlaylist.Status = new PlaylistStatus();
+        //    newPlaylist.Status.PrivacyStatus = "public";
+        //    newPlaylist = await youtubeService.Playlists.Insert(newPlaylist, "snippet,status").ExecuteAsync();
+
+        //    // Add a video to the newly created playlist.
+        //    var newPlaylistItem = new PlaylistItem();
+        //    newPlaylistItem.Snippet = new PlaylistItemSnippet();
+        //    newPlaylistItem.Snippet.PlaylistId = newPlaylist.Id;
+        //    newPlaylistItem.Snippet.ResourceId = new ResourceId();
+        //    newPlaylistItem.Snippet.ResourceId.Kind = "youtube#video";
+        //    newPlaylistItem.Snippet.ResourceId.VideoId = "GNRMeaz6QRI";
+        //    newPlaylistItem = await youtubeService.PlaylistItems.Insert(newPlaylistItem, "snippet").ExecuteAsync();
+
+        //    Console.WriteLine("Playlist item id {0} was added to playlist id {1}.", newPlaylistItem.Id, newPlaylist.Id);
+        //}
+
+
+    }
+}
